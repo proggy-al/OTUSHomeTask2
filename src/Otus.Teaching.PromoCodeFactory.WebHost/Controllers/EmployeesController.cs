@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Otus.Teaching.PromoCodeFactory.Core.Abstractions.Repositories;
 using Otus.Teaching.PromoCodeFactory.Core.Domain.Administration;
+using Otus.Teaching.PromoCodeFactory.Core.Services;
 using Otus.Teaching.PromoCodeFactory.WebHost.Models;
 
 namespace Otus.Teaching.PromoCodeFactory.WebHost.Controllers
@@ -14,34 +15,26 @@ namespace Otus.Teaching.PromoCodeFactory.WebHost.Controllers
     /// </summary>
     [ApiController]
     [Route("api/v1/[controller]")]
-    public class EmployeesController
-        : ControllerBase
+    public class EmployeesController : ControllerBase
     {
-        private readonly IRepository<Employee> _employeeRepository;
-
-        public EmployeesController(IRepository<Employee> employeeRepository)
+        private readonly IEmployeeService _emloyeeService;
+        private readonly IMapper _mapper;
+        public EmployeesController(IEmployeeService emloyeeService, IMapper mapper)
         {
-            _employeeRepository = employeeRepository;
+            _emloyeeService = emloyeeService;
+            _mapper = mapper;
         }
-        
+
         /// <summary>
         /// Получить данные всех сотрудников
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        public async Task<List<EmployeeShortResponse>> GetEmployeesAsync()
+        public async Task<ActionResult<EmployeeShortResponse>> GetEmployeesAsync()
         {
-            var employees = await _employeeRepository.GetAllAsync();
-
-            var employeesModelList = employees.Select(x => 
-                new EmployeeShortResponse()
-                    {
-                        Id = x.Id,
-                        Email = x.Email,
-                        FullName = x.FullName,
-                    }).ToList();
-
-            return employeesModelList;
+            var employees = await _emloyeeService.GetAllEmployeesAsync();
+            var response = _mapper.Map<List<Employee>, List<EmployeeShortResponse>>(employees.ToList());
+            return Ok(response);
         }
         
         /// <summary>
@@ -51,25 +44,11 @@ namespace Otus.Teaching.PromoCodeFactory.WebHost.Controllers
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<EmployeeResponse>> GetEmployeeByIdAsync(Guid id)
         {
-            var employee = await _employeeRepository.GetByIdAsync(id);
-
+            var employee = await _emloyeeService.GetEmployeeByIdAsync(id);
             if (employee == null)
-                return NotFound();
-
-            var employeeModel = new EmployeeResponse()
-            {
-                Id = employee.Id,
-                Email = employee.Email,
-                Role = new RoleItemResponse()
-                {
-                    Name = employee.Role.Name,
-                    Description = employee.Role.Description
-                },
-                FullName = employee.FullName,
-                AppliedPromocodesCount = employee.AppliedPromocodesCount
-            };
-
-            return employeeModel;
+                return NotFound();            
+            var response = _mapper.Map<Employee, EmployeeResponse>(employee);
+            return Ok(response);
         }
     }
 }

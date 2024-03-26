@@ -1,9 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Otus.Teaching.PromoCodeFactory.Core.Abstractions.Repositories;
 using Otus.Teaching.PromoCodeFactory.Core.Domain.Administration;
+using Otus.Teaching.PromoCodeFactory.Core.Domain.PromoCodeManagement;
+using Otus.Teaching.PromoCodeFactory.Core.Services;
 using Otus.Teaching.PromoCodeFactory.WebHost.Models;
 
 namespace Otus.Teaching.PromoCodeFactory.WebHost.Controllers
@@ -13,33 +16,27 @@ namespace Otus.Teaching.PromoCodeFactory.WebHost.Controllers
     /// </summary>
     [ApiController]
     [Route("api/v1/[controller]")]
-    public class RolesController
+    public class RolesController : ControllerBase
     {
-        private readonly IRepository<Role> _rolesRepository;
+        private readonly IRoleService _roleService;        
+        private readonly IMapper _mapper;
 
-        public RolesController(IRepository<Role> rolesRepository)
+        public RolesController(IRoleService roleService, IMapper mapper)
         {
-            _rolesRepository = rolesRepository;
+            _roleService = roleService;            
+            _mapper = mapper;
         }
-        
+
         /// <summary>
         /// Получить все доступные роли сотрудников
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        public async Task<IEnumerable<RoleItemResponse>> GetRolesAsync()
+        public async Task<ActionResult<RoleItemResponse>> GetRolesAsync()
         {
-            var roles = await _rolesRepository.GetAllAsync();
-
-            var rolesModelList = roles.Select(x => 
-                new RoleItemResponse()
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                    Description = x.Description
-                }).ToList();
-
-            return rolesModelList;
+            var roles = await _roleService.GetAllRolesAsync();
+            var response = _mapper.Map<List<Role>, List<RoleItemResponse>>(roles.ToList());
+            return Ok(response);
         }
     }
 }

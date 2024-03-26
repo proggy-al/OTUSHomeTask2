@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Otus.Teaching.PromoCodeFactory.Core.Domain.Administration
+﻿namespace Otus.Teaching.PromoCodeFactory.Core.Domain.Administration
 {
     public class Role
         : BaseEntity
@@ -8,5 +6,7 @@ namespace Otus.Teaching.PromoCodeFactory.Core.Domain.Administration
         public string Name { get; set; }
 
         public string Description { get; set; }
+
+        public decimal TestField { get; set; }
     }
 }
